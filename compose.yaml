@@ -1,0 +1,55 @@
+services:
+  proxy:
+    build: ./proxy
+    ports:
+      - "80:80"
+    networks:
+      - front-tier
+  vote:
+    build: ./vote
+    ports:
+      - "5002:80"
+    networks:
+      - front-tier
+      - back-tier
+  results:
+    build: ./result
+    ports:
+      - "5001:80"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - DATABASE_NAME=postgres
+    networks:
+      - front-tier
+      - back-tier
+  worker:
+    build: ./worker
+    depends_on:
+      - db
+      - redis
+    networks:
+      - front-tier
+      - back-tier    
+  db:
+    image: postgres:9.4
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - back-tier
+    volumes:
+      - "db-data:/var/lib/postgresql/data"
+  redis:
+    image: redis:alpine
+    volumes:
+      - "redis-data:/data"
+    networks:
+      - back-tier
+  
+volumes:
+  db-data:
+  redis-data:
+networks:
+  front-tier:
+  back-tier:
